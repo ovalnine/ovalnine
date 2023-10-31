@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link href="css/reset.css" rel="stylesheet">
+		<link href="css/bounce.css" rel="stylesheet">
+	</head>
+	<body>
+		<!-- CSS/HTML -->
+		<div class="container">
+			<div class="bounce">
+			</div>
+		</div>
+
+		<!-- SVG -->
+		<div class="container">
+			<svg xmlns="http://www.w3.org/2000/svg">
+				<ellipse cx="150" cy="50" rx="25" ry="25" transform-origin="150 25%">
+					<animateTransform
+						attributeName="transform"
+						type="translate"
+						dur="1s"
+						fill="freeze"
+						repeatCount="indefinite"
+						values="0 0; 0 250; 0 250; 0 250; 0 0"
+						calcMode="spline"
+						keyTimes="0; 0.45; 0.5; 0.55; 1"
+						keySplines="0.33 0 0.66 0.33; 0.33 0 0.66 0.33; 0.33 0.66 0.66 1; 0.33 0.66 0.66 1"
+						/>
+					<animateTransform
+						attributeName="transform"
+						type="scale"
+						dur="1s"
+						fill="freeze"
+						additive="sum"
+						repeatCount="indefinite"
+						values="1 1; 1 1; 1.25 0.75; 1 1; 1 1"
+						calcMode="spline"
+						keyTimes="0; 0.45; 0.5; 0.55; 1"
+						keySplines="0.33 0 0.66 0.33; 0.33 0 0.66 0.33; 0.33 0.66 0.66 1; 0.33 0.66 0.66 1"
+						/>
+				</ellipse>
+			</svg>
+		</div>
+
+		<!-- CANVAS: 2D CONTEXT -->
+		<div class="container" id="container-context-2d">
+			<canvas id="canvas-context-2d"></canvas>
+		</div>
+
+		<!-- CANVAS: WEBGL -->
+		<div class="container" id="container-wegl">
+			<canvas id="canvas-webgl"></canvas>
+		</div>
+
+		<script src="context2d.js"></script>
+		<script src="webgl.js"></script>
+	</body>
+</html>
