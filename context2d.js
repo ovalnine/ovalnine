@@ -57,7 +57,7 @@
 
       state.time = next.time;
       state.velocity.y = -v * 0.99;
-      state.position.y = canvas.height - state.radius.y;
+      state.position.y = collisionHeight;
     } else {
       state.time = next.time;
       state.velocity.y = next.velocity.y;
