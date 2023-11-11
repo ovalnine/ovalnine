@@ -1,48 +1,53 @@
+:root {
+	--ball-radius: 25.0px;
+	--box-height: 325.0px;
+	--box-width: 300px;
+}
+
+.ball {
+	clip-path: ellipse(50% 50%);
+	width: calc(var(--ball-radius) * 2);
+	height: calc(var(--ball-radius) * 2);
+	background-color: black;
+}
+
 .bounce {
 	position: relative;
 	top: 25px;
-	width: 50px;
-	height: 50px;
-	clip-path: ellipse(50% 50%);
-	background: linear-gradient(to bottom right, #f52, #05f);
 
-	animation-duration: calc(361ms * 2);
+	animation-duration: 0.36106s;
 	animation-name: bounce-animation;
 	animation-iteration-count: infinite;
 }
 
 @keyframes bounce-animation {
-	0% {
-		transform: translateY(0px);
+	from {
+		transform: translateY(0px) rotateZ(0deg);
 		animation-timing-function: cubic-bezier(0.33, 0, 0.66, 0.33);
 	}
-
 	45% {
-		transform: translateY(250px);
-		animation-timing-function: cubic-bezier(0.33, 0, 0.66, 0.33);
+		transform: translateY(250px) rotateZ(360deg);
 	}
-
 	50% {
-		transform:  translateY(257px) scale(1.25, 0.75);
+		transform:  translateY(257px) rotateZ(360deg) scale(1.25, 0.75);
 		animation-timing-function: cubic-bezier(0.33, 0.66, 0.66, 1);
 	}
-
 	55% {
-		transform: scale(1, 1) translateY(250px);
-		animation-timing-function: cubic-bezier(0.33, 0.66, 0.66, 1);
+		transform: translateY(250px) rotateZ(360deg) scale(1, 1);
 	}
-
-	100% {
-		transform: translateY(0px);
-		animation-timing-function: cubic-bezier(0.33, 0, 0.66, 0.33);
+	to {
+		transform: translateY(0px) rotateZ(720deg);
 	}
 }
 
-.container {
+.border {
 	border: 1px solid black;
-	margin-top: 100px;
-	width: 300px;
-	height: 325px;
+}
+
+.container {
+	margin-top: 2rem;
+	width: var(--box-width);
+	height: var(--box-height);
 	display: flex;
 	justify-content: center;
 	margin-left: auto;

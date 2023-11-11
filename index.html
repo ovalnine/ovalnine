@@ -1,68 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<title></title>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link href="css/reset.css" rel="stylesheet">
-		<link href="css/bounce.css" rel="stylesheet">
-	</head>
-	<body>
+
+<head>
+	<title></title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- Styling -->
+	<link href="css/reset.css" rel="stylesheet">
+	<link href="css/main.css" rel="stylesheet">
+
+	<link href="css/bounce.css" rel="stylesheet">
+
+
+	<!-- Fonts -->
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Gamja+Flower&family=Hanken+Grotesk:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet"> 
+
+	<!-- highlight.js -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/grayscale.css">
+	<!-- <link rel="stylesheet" href="css/grayscale-dark.css"> -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+	<script>hljs.highlightAll();</script>
+</head>
+
+<body>
+	<div class="main-container">
+		<h1>
+			Drawing natively
+		</h1>
+
+		<p>
+			Some introduction bla bla bla...
+		</p>
+
+		<h2>
+			CSS Animations
+		</h2>
+
+		<p>
+			CSS allows you to define a transition between two states of CSS properties like color, position, size, and other.
+			You define the animation transitions with keyframes, specifying a stage by percentage representing the point in time of the transition.
+		</p>
+
+		<pre>
+			<code class="language-css hljs-grayscale">
+.bounce {
+	animation-duration: 0.36106s;
+	animation-name: bounce-animation;
+	animation-iteration-count: infinite;
+}
+
+@keyframes bounce-animation {
+	from {
+		transform:
+			translateY(0px)
+			rotateZ(0deg);
+		animation-timing-function:
+			cubic-bezier(0.33, 0, 0.66, 0.33);
+	}
+	45% {
+		transform:
+			translateY(250px)
+			rotateZ(360deg);
+	}
+	50% {
+		transform:
+			scale(1.25, 0.75);
+			translateY(257px)
+			rotateZ(360deg)
+		animation-timing-function:
+			cubic-bezier(0.33, 0.66, 0.66, 1);
+	}
+	55% {
+		transform:
+			translatee(250px)
+			rotateZ(360deg)
+			scale(1, 1);
+	}
+	to {
+		transform:
+			translateY(0px)
+			rotateZ(720deg);
+	}
+}
+			</code>
+		</pre>
+
+		<p>
+			Here we define a class <code>bounce</code> for our <code>&ltdiv&gt</code> element.
+			This bounce class containts the name, duration and repetition that represents our animation.
+			We have specify that our animation <code>bounce-animation</code> should last <code>0.36106s</code> and should repeat an <code>infinite</code> amount of times.
+		</p>
+
+		<p>
+			Our <code>bounce-animation</code> is represented by the <code>@keyframes</code> object.
+			To simulate a fall we will <code>transform</code> our position in the y-axis using the <code>translateY</code> function.
+			We go <code>from</code> an offset of <code>0px</code>, all the way <code>to</code> an offset of <code>0px</code>.
+		</p>
+
+		<p>
+			The reason for this is that we want our animation to finish at the same place where it started so that we can loop it infinitely.
+			Knowing this we can expect our ball to bounce half way through the animation.
+			So we specify that at <code>50%</code> our animation should translate <code>250px</code>.
+		</p>
+
+		<p>
+			Besides this you may have noticed the <code>rotateZ</code> and <code>scale</code> functions.
+			The rotatation will be more obvious on the next example and the scaling is to add a squishing effect.
+			But what is the <code>animation-timing-function</code>?
+			This is used to determine the intermediate values between keyframes.
+		</p>
+
+		<p>
+			The function and values <code>cubic-bezier(0.33, 0, 0.66, 0.33)</code> are an approximation of a parabola which fits our use for a free falling ball.
+			We then switch it have way through the animation because we need the inverse behavior.
+			With an <code>animation-duration</code> of <code>0.36106s</code> this gives a pretty good simulation of a bouncing ball.
+		</p>
+
 		<!-- CSS/HTML -->
-		<div class="container">
-			<div class="bounce">
+		<div class="container border">
+			<div class="ball top bounce">
 			</div>
 		</div>
 
 		<!-- SVG -->
-		<div class="container">
-			<svg xmlns="http://www.w3.org/2000/svg">
-				<ellipse cx="150" cy="50" rx="25" ry="25" transform-origin="150 25%">
-					<animateTransform
-						attributeName="transform"
-						type="translate"
-						dur="1s"
-						fill="freeze"
-						repeatCount="indefinite"
-						values="0 0; 0 250; 0 250; 0 250; 0 0"
-						calcMode="spline"
-						keyTimes="0; 0.45; 0.5; 0.55; 1"
-						keySplines="0.33 0 0.66 0.33; 0.33 0 0.66 0.33; 0.33 0.66 0.66 1; 0.33 0.66 0.66 1"
-						/>
-					<animateTransform
-						attributeName="transform"
-						type="scale"
-						dur="1s"
-						fill="freeze"
-						additive="sum"
-						repeatCount="indefinite"
-						values="1 1; 1 1; 1.25 0.75; 1 1; 1 1"
-						calcMode="spline"
-						keyTimes="0; 0.45; 0.5; 0.55; 1"
-						keySplines="0.33 0 0.66 0.33; 0.33 0 0.66 0.33; 0.33 0.66 0.66 1; 0.33 0.66 0.66 1"
-						/>
-				</ellipse>
+		<div class="container border">
+			<svg width="13.229167mm" height="13.229167mm" viewBox="0 0 13.229167 13.229167" class="bounce">
+				<g transform="translate(-56.885417,-13.229167)">
+					<path>
+						<animate
+							attributeName="d"
+							dur="0.36106s"
+							repeatCount="indefinite"
+							values="
+								M 70.114583,19.84375 C 67.909722,22.048611 65.704861,24.253472 63.5,26.458333 61.295139,24.253472 59.090278,22.048611 56.885417,19.84375 59.090278,17.638889 61.295139,15.434028 63.5,13.229167 c 2.204861,2.204861 4.409722,4.409722 6.614583,6.614583 z;
+								m 70.114583,19.84375 c 0,3.649245 -2.96546,6.614583 -6.614583,6.614583 -3.649243,0 -6.614583,-2.965459 -6.614583,-6.614583 0,-3.649243 2.96546,-6.614583 6.614583,-6.614583 3.649243,0 6.614583,2.965459 6.614583,6.614583 z;
+								M 70.114583,19.84375 C 67.909722,22.048611 65.704861,24.253472 63.5,26.458333 61.295139,24.253472 59.090278,22.048611 56.885417,19.84375 59.090278,17.638889 61.295139,15.434028 63.5,13.229167 c 2.204861,2.204861 4.409722,4.409722 6.614583,6.614583 z;
+							" />
+					</path>
+				</g>
 			</svg>
 		</div>
 
 		<!-- CANVAS: 2D CONTEXT -->
 		<div class="container" id="container-context-2d">
-			<canvas id="canvas-context-2d"></canvas>
+			<canvas id="canvas-context-2d" class="border"></canvas>
 		</div>
 
 		<!-- CANVAS: WEBGL -->
 		<div class="container" id="container-webgl">
-			<canvas id="canvas-webgl"></canvas>
+			<canvas id="canvas-webgl" class="border"></canvas>
 		</div>
 
 		<!-- CANVAS: WEBGPU -->
 		<div class="container" id="container-webgl">
-			<canvas id="canvas-webgpu"></canvas>
+			<canvas id="canvas-webgpu" class="border"></canvas>
 		</div>
 
 		<script src="vendor/gl-matrix-min.js"></script>
 		<script src="context2d.js"></script>
 		<script src="webgl.js"></script>
 		<script src="webgpu.js"></script>
-	</body>
+	</div>
+</body>
 </html>

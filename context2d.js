@@ -8,65 +8,52 @@
   canvas.height = height;
 
   let ctx = canvas.getContext("2d");
+  ctx.fillStyle = "black";
 
-  const GRAVITY = 9.80665 / 2; // UNITS - m/s²
-  const GRAVITY_MS = GRAVITY / 1000000; // ADJUST FOR MILLISECONDS
-  const GRAVITY_PIXEL_MS = GRAVITY_MS * 3779.5296; // ADJUST FOR PIXEL PHYSICAL SIZE
+  const G = 9.80665 / 2; // UNITS - m/s²
+  const G_MS = G / 1000000; // ADJUST FOR MILLISECONDS
+  const G_PX_MS = G_MS * 3779.5296; // ADJUST FOR PIXEL PHYSICAL SIZE
+  const RADIUS = 25;
+  const E = 0.99
+  const COLL_Y = canvas.height - RADIUS;
 
-  let state = {
-    radius: {
-      x: 25,
-      y: 25,
-    },
-    position: {
-      x: width / 2,
-      y: 0,
-    },
-    velocity: {
-      y: 0,
-    },
-    acceleration: {
-      y: GRAVITY_PIXEL_MS,
-    },
-    time: Date.now(),
+  let ball = {
+    pos: { x: width / 2, y: 0 },
+    vel: { x: 0, y: 0 },
   };
 
   function frame() {
     //CLEAR
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.beginPath();
-
     //DRAW
-    ctx.fillStyle = "black";
-    ctx.ellipse(state.position.x, state.position.y, state.radius.x, state.radius.y, 0, 0, 2 * Math.PI);
+    ctx.beginPath();
+    ctx.arc(ball.pos.x, ball.pos.y, RADIUS, 0, Math.PI * 2);
     ctx.fill();
 
-    var next = structuredClone(state);
-    next.time = Date.now();
+    var dt = Date.now() - t;
+    t = Date.now();
 
-    var elapsed = next.time - state.time;
-    next.velocity.y += next.acceleration.y * elapsed;
-    next.position.y += ((next.velocity.y + state.velocity.y) / 2) * elapsed;
+    var next = structuredClone(ball);
 
-    let collisionHeight = canvas.height - state.radius.y;
-    if (next.position.y > collisionHeight) {
-      var dy = collisionHeight - state.position.y;
-      var t = (-state.velocity.y + Math.sqrt(state.velocity.y * state.velocity.y + 2 * state.acceleration.y * dy)) / state.acceleration.y;
-      var v = next.acceleration.y * t + state.velocity.y;
+    next.vel.y += G_PX_MS * dt;
+    next.pos.y += ((next.vel.y + ball.vel.y) / 2) * dt;
 
-      state.time = next.time;
-      state.velocity.y = -v * 0.99;
-      state.position.y = collisionHeight;
-    } else {
-      state.time = next.time;
-      state.velocity.y = next.velocity.y;
-      state.position.y = next.position.y;
+    if (next.pos.y > COLL_Y) {
+      let dy = COLL_Y - ball.pos.y;
+      let t = (-ball.vel.y + Math.sqrt(ball.vel.y * ball.vel.y + 2 * G_PX_MS * dy)) / G_PX_MS;
+      let v = G_PX_MS * t + ball.vel.y;
+
+      next.vel.y = -v * E;
+      next.pos.y = COLL_Y;
     }
+
+    ball.vel.y = next.vel.y;
+    ball.pos.y = next.pos.y;
 
     window.requestAnimationFrame(frame);
   }
 
-  state.time = Date.now();
+  var t = Date.now();
   window.requestAnimationFrame(frame);
 })();
