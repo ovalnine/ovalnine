@@ -10,9 +10,10 @@
   let ctx = canvas.getContext("2d");
   ctx.fillStyle = "black";
 
-  const G = 9.80665 / 2; // UNITS - m/s²
-  const G_MS = G / 1000000; // ADJUST FOR MILLISECONDS
-  const G_PX_MS = G_MS * 3779.5296; // ADJUST FOR PIXEL PHYSICAL SIZE
+  const G = 9.80665;            // m/s²
+  const G_MS = G / 1_000_000;   // m/ms² 
+  const PX_M = 96 / 0.0254;     // px/m
+  const G_PX_MS = G_MS * PX_M;  // px/ms²
   const RADIUS = 25;
   const E = 0.99
   const COLL_Y = canvas.height - RADIUS;
@@ -22,7 +23,7 @@
     vel: { x: 0, y: 0 },
   };
 
-  function frame() {
+  function draw() {
     //CLEAR
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -30,14 +31,16 @@
     ctx.beginPath();
     ctx.arc(ball.pos.x, ball.pos.y, RADIUS, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  function update() {
+    var next = structuredClone(ball);
 
     var dt = Date.now() - t;
     t = Date.now();
 
-    var next = structuredClone(ball);
-
     next.vel.y += G_PX_MS * dt;
-    next.pos.y += ((next.vel.y + ball.vel.y) / 2) * dt;
+    next.pos.y += (ball.vel.y * dt) + (G_PX_MS / 2) * (dt * dt);
 
     if (next.pos.y > COLL_Y) {
       let dy = COLL_Y - ball.pos.y;
@@ -50,7 +53,11 @@
 
     ball.vel.y = next.vel.y;
     ball.pos.y = next.pos.y;
+  }
 
+  function frame() {
+    draw();
+    update();
     window.requestAnimationFrame(frame);
   }
 

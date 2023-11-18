@@ -180,7 +180,7 @@
     gl.viewport(0, 0, canvas.width, canvas.height);
   }
 
-  const GRAVITY = 9.80665 / 2; // UNITS - m/s²
+  const GRAVITY = 9.80665; // UNITS - m/s²
   const GRAVITY_MS = GRAVITY / 1000000; // ADJUST FOR MILLISECONDS
   const GRAVITY_PIXEL_MS = GRAVITY_MS * 3779.5296; // ADJUST FOR PIXEL PHYSICAL SIZE
   let state = {
@@ -211,7 +211,7 @@
 
     var elapsed = next.time - state.time;
     next.velocity.y += next.acceleration.y * elapsed;
-    next.position.y += ((next.velocity.y + state.velocity.y) / 2) * elapsed;
+    next.position.y += (state.velocity.y * elapsed) + (state.acceleration.y / 2) * (elapsed * elapsed);
 
     let collisionHeight = state.cube * 2 - state.radius;
     if (next.position.y > collisionHeight) {

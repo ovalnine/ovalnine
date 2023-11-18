@@ -197,7 +197,7 @@
   radiusUniformBuffer.unmap();
 
   // GRAVITY UNIFORM
-  const GRAVITY = 9.80665 / 2; // UNITS - m/s²
+  const GRAVITY = 9.80665; // UNITS - m/s²
   const GRAVITY_MS = GRAVITY / 1000000; // ADJUST FOR MILLISECONDS
   const GRAVITY_PIXEL_MS = GRAVITY_MS * 3779.5296; // ADJUST FOR PIXEL PHYSICAL SIZE
   const gravityUniformBuffer = device.createBuffer({

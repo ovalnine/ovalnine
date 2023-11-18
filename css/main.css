@@ -3,11 +3,13 @@ body {
 }
 
 h1 {
+  text-align: center;
   font-family: 'Gamja Flower', sans-serif;
   font-size: 7rem;
 }
 
 h2 {
+  text-align: center;
   font-size: 3rem;
   margin-top: 2rem;
 }
@@ -30,6 +32,7 @@ code {
   white-space: pre;
   font-family: 'Space Mono', monospace;
   font-size: small;
+  font-variant-ligatures: none;
 }
 
 .main-container {

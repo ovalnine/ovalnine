@@ -22,6 +22,9 @@
 	<!-- <link rel="stylesheet" href="css/grayscale-dark.css"> -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 	<script>hljs.highlightAll();</script>
+	<!-- MathJax -->
+	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+	<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body>
@@ -35,11 +38,15 @@
 		</p>
 
 		<h2>
-			CSS Animations
+			CSS
+			<br/>
+			-
+			<br/>
+			Transformation
 		</h2>
 
 		<p>
-			CSS allows you to define a transition between two states of CSS properties like color, position, size, and other.
+			CSS animations allow you to define a transition between two states of CSS properties like color, position, size, and other.
 			You define the animation transitions with keyframes, specifying a stage by percentage representing the point in time of the transition.
 		</p>
 
@@ -101,7 +108,7 @@
 
 		<p>
 			The reason for this is that we want our animation to finish at the same place where it started so that we can loop it infinitely.
-			Knowing this we can expect our ball to bounce half way through the animation.
+			Knowing this we can expect the ball to bounce half way through the animation.
 			So we specify that at <code>50%</code> our animation should translate <code>250px</code>.
 		</p>
 
@@ -124,6 +131,54 @@
 			</div>
 		</div>
 
+		<h2>
+			SMIL
+			<br/>
+			-
+			<br/>
+			Morphing
+		</h2>
+
+		<p>
+			SMIL (Synchronized Multimedia Integration Language) is a markup language that can be used in conjunction with SVG.
+			It allows you to create animations in a declarative way similarly to CSS.
+			There are some things that CSS can't animate and so SMIL has some advantage over this.
+		</p>
+
+		<p>
+			For this animation we will take advantage of our previous example and we'll use our already existing CSS <code>bounce</code> class.
+			We will use SMIL to morph the ball between a circle and a square, and the rotating animation that I mentioned earlier will help us visualize the rotating square a little bit better.
+		</p>
+
+		<pre>
+			<code class="language-html hljs-grayscale">
+&lt;path&gt;
+	&lt;animate
+		attributeName="d"
+		dur="0.36106s"
+		repeatCount="indefinite"
+		values="
+			M 70.114583,19.84375 C 67.909722,22.048611 65.704861,24.253472 63.5,26.458333 61.295139,24.253472 59.090278,22.048611 56.885417,19.84375 59.090278,17.638889 61.295139,15.434028 63.5,13.229167 c 2.204861,2.204861 4.409722,4.409722 6.614583,6.614583 z;
+			m 70.114583,19.84375 c 0,3.649245 -2.96546,6.614583 -6.614583,6.614583 -3.649243,0 -6.614583,-2.965459 -6.614583,-6.614583 0,-3.649243 2.96546,-6.614583 6.614583,-6.614583 3.649243,0 6.614583,2.965459 6.614583,6.614583 z;
+			M 70.114583,19.84375 C 67.909722,22.048611 65.704861,24.253472 63.5,26.458333 61.295139,24.253472 59.090278,22.048611 56.885417,19.84375 59.090278,17.638889 61.295139,15.434028 63.5,13.229167 c 2.204861,2.204861 4.409722,4.409722 6.614583,6.614583 z;
+		" /&gt;
+&lt;/path&gt;
+			</code>
+		</pre>
+
+		<p>
+			Here I am just showing the <code>&lt;path/&gt;</code> element of the <code>svg</code> that we will render.
+			The <code>d</code> attribute defines the path to be drawn.
+			We won't specify it directly on the <code>path</code> element, but we will add an <code>animate</code> child element that we will use to morph this attribute and we'll initialize it there.
+		</p>
+
+		<p>
+			So in the <code>animate</code> element we add an attribute <code>attributeName</code> that specifies that we will modify the <code>d</code> attribute of the <code>path</code> element.
+			The <code>dur</code> attribute specifies the duration of a single cycle of the animation.
+			The <code>repeatCount</code> attribute specifies how many times the animation will be repeated.
+			And lastly the <code>values</code> attribute defines a list of values that we'll interpolate in between as we move through the animation.
+		</p>
+
 		<!-- SVG -->
 		<div class="container border">
 			<svg width="13.229167mm" height="13.229167mm" viewBox="0 0 13.229167 13.229167" class="bounce">
@@ -142,6 +197,151 @@
 				</g>
 			</svg>
 		</div>
+
+		<h2>
+			2D Context
+			<br/>
+			-
+			<br/>
+			Simulation
+		</h2>
+
+		<p>
+			You have probably seen the <code>&lt;canvas/&gt;</code> element before which is used for drawing graphics and animations.
+			One way to utilize this element is through the Canvas API. This API provides an interface called <code>CanvasRenderingContext2D</code>
+			which contains a bunch of methods that we can use to draw 2D objects inside the <code>&lt;canvas/&gt;</code> element.
+		</p>
+
+		<p>
+			The <code>CanvasRenderingContext2D</code> is a pretty high level interface.
+			It has methods for drawing objects like <code>rect(x, y, width, height)</code>,
+			drawing images with <code>drawImage(image, dx, dy)</code>,
+			drawing text like <code>strokeText(text, x, y [, maxWidth])</code>,
+			or changing the drawing style like <code>lineWidth</code>.
+			There are a lot more methods obviously, but you can already tell that these are all pretty straightforward.
+		</p>
+
+		<p>
+			For the next example we will try to simulate a free falling bouncing ball.
+			We will use the <code>&lt;canvas/&gt;</code> and <code>CanvasRenderingContext2D</code> to draw and animate the ball.
+		</p>
+
+		<pre>
+			<code class="language-js hljs-grayscale">
+const G = 9.80665;            // m/s²
+const G_MS = G / 1_000_000;   // m/ms² 
+const PX_M = 96 / 0.0254;     // px/m
+const G_PX_MS = G_MS * PX_M;  // px/ms²
+
+const RADIUS = 25;
+const E = 0.99
+const COLL_Y = canvas.height - RADIUS;
+
+let ball = {
+  pos: { x: width / 2, y: 0 },
+  vel: { x: 0, y: 0 },
+};
+			</code>
+		</pre>
+
+		<p>
+			We will start by defining our initial state and some <code>const</code>ants that we'll use in our simulated system.
+			We will start with <code>G</code>ravity as defined in international units (<code>m/s²</code>) and we will convert it down to web units (<code>px/ms²</code>).
+			We will specify the ball <code>RADIUS</code>.
+			And we want to define a coefficient of restitution (<code>E</code>) for the bouncing ball.
+			<code>COLL_Y</code> will be our collision height.
+			And lastly, we will define the state of the ball with an initial <code>pos</code>ition and <code>vel</code>ocity.
+		</p>
+
+		<pre>
+			<code class="language-js hljs-grayscale">
+function draw() {
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.beginPath();
+	ctx.arc(ball.pos.x, ball.pos.y, RADIUS, 0, Math.PI * 2);
+	ctx.fill();
+}
+			</code>
+		</pre>
+
+		<p>
+			We can use our <code>CanvasRenderingContext2D</code> to draw the simulated bouncing ball.
+			Every time we need to draw, we'll clearing everything by drawing a <code>clearRect(x, y, width, height)</code> the size of the <code>&lt;canvas/&gt;</code>.
+			We will start with <code>beginPath()</code> to create a new drawing object.
+			We don't have a circle function, but we can use the <code>arc(x, y, radius, startAngle, endAngle)</code> method to draw a circle by specifying a full <code>360°</code> turn.
+			And lastly we can specify that we want to <code>fill()</code> this path with color.
+		</p>
+
+		<pre>
+			<code class="language-js hljs-grayscale">
+function update() {
+	var next = structuredClone(ball);
+
+	var dt = Date.now() - t;
+	t = Date.now();
+
+	next.vel.y += G_PX_MS * dt;
+	next.pos.y += (ball.vel.y * dt) + (G_PX_MS / 2) * (dt * dt);
+
+	if (next.pos.y > COLL_Y) {
+		let dy = COLL_Y - ball.pos.y;
+		let t = (-ball.vel.y + Math.sqrt(ball.vel.y * ball.vel.y + 2 * G_PX_MS * dy)) / G_PX_MS;
+		let v = G_PX_MS * t + ball.vel.y;
+
+		next.vel.y = -v * E;
+		next.pos.y = COLL_Y;
+	}
+
+	ball.vel.y = next.vel.y;
+	ball.pos.y = next.pos.y;
+}
+			</code>
+		</pre>
+
+		<p>
+			To calculate the ball's <code>next</code> <code>pos</code>ition and <code>vel</code>ocity we will use a little bit of math.
+			On every frame we will calculate the change of time <code>dt</code>.
+			We will need to increase our velocity by our given time delta.
+			From calculus we know that acceleration is equal to the ratio of the change of velocity with respect to time, and after rearranging terms we get:
+			<br/>
+			\(\Delta v = g\Delta t\)
+		</p>
+
+		<p>
+			Similarly we will need to increase our position by our given time delta.
+			And again, from calculus we know that acceleration is equal to the second derivative of displacement(change in position). So after integrating and rearranging terms we get:
+			<br/>
+			\(\Delta x = v_0\Delta t + \frac{1}{2}g\Delta t^2\)
+		</p>
+
+		<p>
+			Now that we have our <code>next</code> state,
+			we will need to check if the ball will collide with the ground.
+			In the case where the ball exceeds the collision height, we will calculate the final velocity at the moment of collision.
+			We will then reset the ball's <code>vel</code>ocity state to this final velocity but with opposite direction.
+			And we'll also reset the ball's <code>pos</code>ition to collision height.
+		</p>
+
+		<p>
+			To commit this calculated <code>next</code> state, we just assign it back to our current <code>ball</code> state.
+		</p>
+
+		<pre>
+			<code class="language-js hljs-grayscale">
+function frame() {
+	draw();
+	update();
+	window.requestAnimationFrame(frame);
+}
+			</code>
+		</pre>
+
+		<p>
+			In order to run this simulation system in a loop, we will use 
+			<code>window.requestAnimationFrame()</code> which allow us to execute code at the display's frame rate.
+			Our <code>frame</code> function would then start by <code>draw</code>ing the bouncing ball, it would then <code>update</code> the state of the ball,
+			and will lastly pass itself as a callback to loop as soon as the browser sees fit.
+		</p>
 
 		<!-- CANVAS: 2D CONTEXT -->
 		<div class="container" id="container-context-2d">
