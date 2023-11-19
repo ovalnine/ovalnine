@@ -15,8 +15,8 @@
   const PX_M = 96 / 0.0254;     // px/m
   const G_PX_MS = G_MS * PX_M;  // px/ms²
   const RADIUS = 25;
-  const E = 0.99
   const COLL_Y = canvas.height - RADIUS;
+  const E = 0.99
 
   let ball = {
     pos: { x: width / 2, y: 0 },

@@ -21,7 +21,9 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/grayscale.css">
 	<!-- <link rel="stylesheet" href="css/grayscale-dark.css"> -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/glsl.min.js"></script>
 	<script>hljs.highlightAll();</script>
+
 	<!-- MathJax -->
 	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
 	<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -34,7 +36,12 @@
 		</h1>
 
 		<p>
-			Some introduction bla bla bla...
+			My intention with this blog is to demonstarte and explain some of the core concepts behind these 5 native features the browser provides.
+			With this said, I will skip some of the boilerplate that comes with using these features directly.
+		</p>
+		<p>
+			Although there are libraries that can facilitate the use of these features,
+			I believe that understanding the core concepts behind them allow one to make a better use of these libraries.
 		</p>
 
 		<h2>
@@ -347,6 +354,280 @@ function frame() {
 		<div class="container" id="container-context-2d">
 			<canvas id="canvas-context-2d" class="border"></canvas>
 		</div>
+
+		<h2>
+			WebGL
+			<br/>
+			-
+			<br/>
+			3-Dimensional
+		</h2>
+
+		<p>
+			Now that we've seen in our previous example how to draw in 2D, we can move on to using the <code>WebGL2RenderingContext</code> to draw 3D objects.
+			This interface is an implementation of the OpenGL ES(Embedded Systems) 3.0 specification for the browser's <code>&lt;canvas/&gt;</code> element.
+			This specification is a subset of the OpenGL graphics rendering API.
+		</p>
+
+		<p>
+			The next example will make use of the same simulation system that we created in the last section.
+			We will try to recreate the last example in 3D, but we won't have the high level API to draw objects directly,
+			which means that we will have to create these ourselves.
+		</p>
+
+		<p>
+			We can picture the last example in 3D by imagining a scene with a box, and a sphere bouncing inside of it.
+			To gain a little perspective over our scene, we can also imagine ourselves rotating around it; in order to represent this we will use an orbiting camera.
+		</p>
+
+		<p>
+			For us to draw any object we need to represent it in terms of vertices and indices.
+			Lets define a vertex as a point in space where two or more lines intersect or meet, and lets assign an index to it for reference.
+			We can use any 2 indexes to connect vertices with a line.
+			And similarly, we can use 3 indexes to create a triangle/face.
+		</p>
+
+		<pre>
+			<code class="language-js hljs-grayscale">
+const S = 100; // Half side of the cube
+function initCube() {
+	const vertices = new Float32Array([
+		-S, -S, -S,
+		 S, -S, -S,
+		 S,  S, -S,
+		//...
+	]);
+
+	const indices = new Uint16Array([
+		0, 1,
+		1, 2, 
+		//...
+	]);
+
+	var vertexBuffer = gl.createBuffer();
+	var indexBuffer = gl.createBuffer();
+
+	return function drawCube() {
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+	
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+	
+		// Get the attribute pointer and enable it
+		var vertexPosition = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+		gl.enableVertexAttribArray(vertexPosition);
+		gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
+	
+		gl.drawElements(gl.LINES, indices.length, gl.UNSIGNED_SHORT, 0);
+	}
+}
+			</code>
+		</pre>
+
+		<p>
+			For our box we will draw lines representing a cube.
+			A cube has 8 corner or <code>vertices</code> that we will generate from its center using the half side length <code>S</code> of the cube.
+			The <code>indices</code> will then represent the pair of vertices that make up our box lines.
+		</p>
+
+		<p>
+			We now need a way to send this data down to our WebGL rendering pipeline in our GPU.
+			We will use <code>createBuffer</code> to allocate the memory for this data.
+			With <code>bindBuffer</code> we'll set the current buffer to be used.
+			<code>ARRAY_BUFFER</code> just represents <code>vertex</code> data and <code>ELEMENT_ARRAY_BUFFER</code> represents <code>index</code> data.
+			In this case our box data never changes so we will use <code>STATIC_DRAW</code> usage.
+		</p>
+
+		<pre>
+			<code class="language-glsl hljs-grayscale">
+	attribute vec4 aVertexPosition;
+	uniform mat4 uModelViewMatrix;
+	uniform mat4 uProjectionMatrix;
+	void main(void) {
+		gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+	}
+			</code>
+		</pre>
+
+		<p>
+			This is our vertex shader, this shader is in charge of transforming our vertex data into anything that we want.
+			It is most commonly used for applying the MVP (Model-View-Projection) matrix
+			to transform from local space to viewport space,
+			we will look a little bit more at this matrices in a moment.
+			The <code>attribute vec4 aVertexPosition</code> is the place where we will recieve each vertex element.
+		</p>
+
+		<p>
+			With the <code>getAttribLocation</code> method we can get back the index position of this attribute in our shader.
+			Because attributes are disabled by default, we can use this index to enable the vertex attribute with <code>enableVertexAttribArray</code>.
+		</p>
+
+		<p>
+			We now need to bind our vertex buffer to our vertex attribute specifying the format of our data with <code>vertexAttribPointer</code>. We pass in the index for the attribute,
+			each of our vertices has <code>3</code> components: x y z, each component is of type <code>FLOAT</code>, we don't need to normalize our data,
+			our data is tightly packed so our stride is <code>0</code>, and since our buffer is only used for this object vertex data, our offset is <code>0</code> as well.
+		</p>
+
+		<p>
+			Lastly, we render our box by calling <code>drawElements</code>. We pass in the mode <code>LINES</code>, we set the number of indices used for rendering all the lines,
+			the type of each index is <code>UNSIGNED_SHORT</code>, and no offset either.
+		</p>
+
+		<pre>
+			<code class="language-js hljs-grayscale">
+	function initSphere() {
+		// Sphere resolution
+		const SEGMENTS = 30;
+		const RINGS = 30
+	
+		var vertexBuffer = gl.createBuffer();
+		var indexBuffer = gl.createBuffer();
+	
+		var vertices = new Float32Array((SEGMENTS+1) * (RINGS+1) * 3);
+		var indices = new Uint16Array(SEGMENTS * RINGS * 6);
+	
+		return function drawSphere(xx, yy, zz, r) {
+			let vx = [];
+			let ix = [];
+	
+			// Generate the vertices and indices for the sphere
+			for (let i = 0; i <= RINGS; i++) {
+				const phi = (i / RINGS) * Math.PI;
+				const y = Math.cos(phi) * r;
+	
+				for (let j = 0; j <= SEGMENTS; j++) {
+					const theta = (j / SEGMENTS) * 2 * Math.PI;
+					const x = Math.sin(phi) * Math.cos(theta) * r;
+					const z = Math.sin(phi) * Math.sin(theta) * r;
+		
+					vx.push(x+xx, y-yy, z+zz);
+		
+					if (i < RINGS && j < SEGMENTS) {
+						const first = i * (SEGMENTS + 1) + j;
+						const second = first + SEGMENTS + 1;
+						ix.push(first, second, first + 1);
+						ix.push(second, second + 1, first + 1);
+					}
+				}
+			}
+	
+			vertices.set(vx);
+			indices.set(ix);
+
+			gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+			gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
+
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+			var vertexPosition = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+			gl.enableVertexAttribArray(vertexPosition);
+			gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
+
+			gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+		}
+	}
+			</code>
+		</pre>
+
+		<p>
+			Now that we know how to draw a box, we should be able to draw a sphere without any problem.
+			The code above shows how to generate the vertices and indices for it.
+			I will leave it as an exercise for you to understand how it works exactly.
+		</p>
+
+		<p>
+			The differences between the sphere and the box are a few. The sphere is moving in space, so we will need to generate it everytime we move it.
+			There are other approaches much more efficient than this, but for our purposes this should suffice.
+			Since our vertex buffer data is constantly changing we will use <code>DYNAMIC_DRAW</code> mode for better performance.
+			The only other difference is that we will draw <code>TRIANGLES</code> instead of <code>LINES</code>.
+		</p>
+
+		<pre>
+			<code class="language-js hljs-grayscale">
+	void main(void) {
+		gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+	}
+			</code>
+		</pre>
+
+		<p>
+			This is our fragment shader, this shader is in charge of determining the final color of our face.
+			In this case we will just color them black <code>vec4(0.0, 0.0, 0.0, 1.0)</code>.
+		</p>
+
+		<pre>
+			<code class="language-js hljs-grayscale">
+function initCamera() {
+	// Camera component
+	const CAM = 200 * Math.sqrt(2) / 2;
+	const camera = glMatrix.vec3.fromValues(CAM, CAM, CAM);
+
+	// Set the camera perspective
+	const H = canvas.width / 2;
+	const V = canvas.height / 2;
+	const NEAR = 1.0;
+	const FAR = 1000.0;
+
+	// Create projection and model-view matrices
+	const projectionMatrix = glMatrix.mat4.create();
+	const modelViewMatrix = glMatrix.mat4.create();
+
+	glMatrix.mat4.ortho(projectionMatrix, -H, H, -V, V, NEAR, FAR);
+
+	return function rotateSetCamera() {
+
+		// Rotate camera
+		glMatrix.vec3.rotateY(camera, camera, [0, 0, 0], Math.PI / 720);
+
+		// Point camera to origin
+		glMatrix.mat4.lookAt(modelViewMatrix, camera, [0, 0, 0], [0, 1, 0]);
+
+		// Pass the matrices to the shaders
+		var projectionMatrixUniform = gl.getUniformLocation(shaderProgram, "uProjectionMatrix");
+		gl.uniformMatrix4fv(projectionMatrixUniform, false, projectionMatrix);
+
+		var modelViewMatrixUniform = gl.getUniformLocation(shaderProgram, "uModelViewMatrix");
+		gl.uniformMatrix4fv(modelViewMatrixUniform, false, modelViewMatrix);
+	}
+}
+			</code>
+		</pre>
+
+		<p>
+			The representation of a camera is given by the view and projection matrices we mentioned before.
+			The math behind setting up this matrices is out of our scope, but we can use the <code>glMatrix</code> library to generate them very easily.
+		</p>
+
+		<p>
+			We will define the position of our <code>camera</code> in space with a <code>vec3</code> value.
+			We can use <code>mat4.ortho</code> to generate an orthographic projection matrix and
+			<code>mat4.lookAt</code> to generate a view matrix from our camera position to a point in space.
+			As we rotate our camera we will want to keep updating our view matrix.
+		</p>
+
+		<p>
+			We can use <code>getUniformLocation</code> to get an identifier of the place in the GPU's memory where this uniform variable is located.
+			Then we use this identifier to set the uniform variable in our shader to our corresponding matrix value.
+		</p>
+
+		<pre>
+			<code class="language-js hljs-grayscale">
+	function clear() {
+		gl.clearColor(1.0, 1.0, 1.0, 1.0);
+		gl.clear(gl.COLOR_BUFFER_BIT);
+	}
+			</code>
+		</pre>
+
+		<p>
+			We can select the <code>clearColor</code> and call <code>clear</code> with the <code>COLOR_BUFFER_BIT</code> to clear the screen from any render objects.
+		</p>
+
+		<p>
+			Now you can put everything in motion with a <code>frame</code> function like in the last example.
+		</p>
 
 		<!-- CANVAS: WEBGL -->
 		<div class="container" id="container-webgl">

@@ -20,14 +20,14 @@
       uniform mat4 uModelViewMatrix;
       uniform mat4 uProjectionMatrix;
       void main(void) {
-          gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+        gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
       }
   `;
 
   // Fragment shader program
   var fsSource = `
       void main(void) {
-          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
       }
   `;
 
@@ -59,176 +59,200 @@
     console.error("Unable to initialize the shader program: " + gl.getProgramInfoLog(shaderProgram));
   }
 
-  function drawCube(s) {
-    // Define cube vertices
-    var vertices = new Float32Array([
-      -s, -s, -s,
-       s, -s, -s,
-       s,  s, -s,
-      -s,  s, -s,
-      -s, -s,  s,
-       s, -s,  s,
-       s,  s,  s,
-      -s,  s,  s,
-    ]);
 
-    // Define cube edges
-    var indices = new Uint16Array([0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 4, 7, 7, 3, 4, 5, 5, 1]);
+  function initSphere() {
+    // Sphere resolution
+    const SEGMENTS = 30;
+    const RINGS = 30
 
-    // Create a buffer for the cube's vertices
     var vertexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-
-    // Create a buffer for the cube's edges
     var indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
-    // Get the attribute location and enable it
-    var vertexPosition = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-    gl.enableVertexAttribArray(vertexPosition);
-    gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
+    var vertices = new Float32Array((SEGMENTS+1) * (RINGS+1) * 3);
+    var indices = new Uint16Array(SEGMENTS * RINGS * 6);
 
-    gl.drawElements(gl.LINES, indices.length, gl.UNSIGNED_SHORT, 0);
-  }
+    return function drawSphere(xx, yy, zz, r) {
+      let vx = [];
+      let ix = [];
 
-  function drawSphere(xx, yy, zz, rr) {
-    const segments = 40;
-    const rings = 40;
+      // Generate the vertices and indices for the sphere
+      for (let i = 0; i <= RINGS; i++) {
+        const phi = (i / RINGS) * Math.PI;
+        const y = Math.cos(phi) * r;
 
-    // Arrays to store the vertices and indices
-    let vertices = [];
-    let indices = [];
+        for (let j = 0; j <= SEGMENTS; j++) {
+          const theta = (j / SEGMENTS) * 2 * Math.PI;
+          const x = Math.sin(phi) * Math.cos(theta) * r;
+          const z = Math.sin(phi) * Math.sin(theta) * r;
 
-    // Generate the vertices and indices for the sphere
-    for (let i = 0; i <= rings; i++) {
-      const phi = (i / rings) * Math.PI;
-      const y = Math.cos(phi) * rr;
+          vx.push(x+xx, y-yy, z+zz);
 
-      for (let j = 0; j <= segments; j++) {
-        const theta = (j / segments) * 2 * Math.PI;
-        const x = Math.sin(phi) * Math.cos(theta) * rr;
-        const z = Math.sin(phi) * Math.sin(theta) * rr;
-
-        vertices.push(x+xx, y-yy, z+zz);
-
-        if (i < rings && j < segments) {
-          const first = i * (segments + 1) + j;
-          const second = first + segments + 1;
-          indices.push(first, second, first + 1);
-          indices.push(second, second + 1, first + 1);
+          if (i < RINGS && j < SEGMENTS) {
+            const first = i * (SEGMENTS + 1) + j;
+            const second = first + SEGMENTS + 1;
+            ix.push(first, second, first + 1);
+            ix.push(second, second + 1, first + 1);
+          }
         }
       }
+
+      vertices.set(vx);
+      indices.set(ix);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
+
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.DYNAMIC_DRAW);
+
+      var vertexPosition = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+      gl.enableVertexAttribArray(vertexPosition);
+      gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
+
+      gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
     }
-
-    const vx = new Float32Array(vertices);
-    const ix = new Uint16Array(indices);
-
-    // Create a buffer for the cube's vertices
-    var vertexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, vx, gl.STATIC_DRAW);
-
-    // Create a buffer for the cube's edges
-    var indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, ix, gl.STATIC_DRAW);
-
-    // Get the attribute location and enable it
-    var vertexPosition = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-    gl.enableVertexAttribArray(vertexPosition);
-    gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
-
-    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
   }
 
-  function setCamera() {
-    // Create projection and model-view matrices
-    var projectionMatrix = glMatrix.mat4.create();
-    var modelViewMatrix = glMatrix.mat4.create();
+  function initCamera() {
+    // Camera component
+    const CAM = 200 * Math.sqrt(2) / 2;
+    const camera = glMatrix.vec3.fromValues(CAM, CAM, CAM);
 
     // Set the camera perspective
-    var hh = canvas.width / 2;
-    var vv = canvas.height / 2;
-    var near = 1.0;
-    var far = 1000.0;
+    const H = canvas.width / 2;
+    const V = canvas.height / 2;
+    const NEAR = 1.0;
+    const FAR = 1000.0;
 
-    glMatrix.mat4.ortho(projectionMatrix, -hh, hh, -vv, vv, near, far);
+    // Create projection and model-view matrices
+    const projectionMatrix = glMatrix.mat4.create();
+    const modelViewMatrix = glMatrix.mat4.create();
 
-    // Set the camera position and orientation
-    var cameraPosition2 = [0, 0, 200];
-    glMatrix.vec3.rotateY(cameraPosition2, cameraPosition2, [0, 0, 0], ((-3 * Math.PI) / 4) + Date.now() * 0.001);
-    var cameraPosition1 = [0, 0, 200];
-    glMatrix.vec3.rotateX(cameraPosition1, cameraPosition1, [0, 0, 0], Math.PI / 4);
-    var cameraPosition = [cameraPosition2[0], cameraPosition1[1], cameraPosition2[2]];
-    glMatrix.mat4.lookAt(modelViewMatrix, cameraPosition, [0, 0, 0], [0, 1, 0]);
+    glMatrix.mat4.ortho(projectionMatrix, -H, H, -V, V, NEAR, FAR);
 
-    // Pass the matrices to the shaders
-    var projectionMatrixUniform = gl.getUniformLocation(shaderProgram, "uProjectionMatrix");
-    var modelViewMatrixUniform = gl.getUniformLocation(shaderProgram, "uModelViewMatrix");
-    gl.uniformMatrix4fv(projectionMatrixUniform, false, projectionMatrix);
-    gl.uniformMatrix4fv(modelViewMatrixUniform, false, modelViewMatrix);
+    return function rotateSetCamera() {
+
+      // Rotate camera
+      glMatrix.vec3.rotateY(camera, camera, [0, 0, 0], Math.PI / 720);
+
+      // Point camera to origin
+      glMatrix.mat4.lookAt(modelViewMatrix, camera, [0, 0, 0], [0, 1, 0]);
+
+      // Pass the matrices to the shaders
+      var projectionMatrixUniform = gl.getUniformLocation(shaderProgram, "uProjectionMatrix");
+      gl.uniformMatrix4fv(projectionMatrixUniform, false, projectionMatrix);
+
+      var modelViewMatrixUniform = gl.getUniformLocation(shaderProgram, "uModelViewMatrix");
+      gl.uniformMatrix4fv(modelViewMatrixUniform, false, modelViewMatrix);
+    }
   }
+
 
   function clear() {
-    // Set the clear color and enable depth testing
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
-    gl.enable(gl.DEPTH_TEST);
-    // Clear the canvas and draw the wireframe cube
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clear(gl.COLOR_BUFFER_BIT);
   }
 
-  const GRAVITY = 9.80665; // UNITS - m/s²
-  const GRAVITY_MS = GRAVITY / 1000000; // ADJUST FOR MILLISECONDS
-  const GRAVITY_PIXEL_MS = GRAVITY_MS * 3779.5296; // ADJUST FOR PIXEL PHYSICAL SIZE
-  let state = {
-    cube: 100,
-    radius: 25,
-    position: {
-      x: width / 2,
-      y: 0,
-    },
-    velocity: {
-      y: 0,
-    },
-    acceleration: {
-      y: GRAVITY_PIXEL_MS,
-    },
-    time: Date.now(),
+  const S = 100; // Half a side of cube
+  function initCube() {
+    const vertices = new Float32Array([
+      -S, -S, -S,
+       S, -S, -S,
+       S,  S, -S,
+      -S,  S, -S,
+      -S, -S,  S,
+       S, -S,  S,
+       S,  S,  S,
+      -S,  S,  S,
+    ]);
+
+    const indices = new Uint16Array([
+      0, 1,
+      1, 2, 
+      2, 3,
+      3, 0,
+      0, 4,
+      4, 7,
+      7, 3,
+      4, 5,
+      5, 1,
+    ]);
+
+    var vertexBuffer = gl.createBuffer();
+    var indexBuffer = gl.createBuffer();
+
+    return function drawCube() {
+      gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+      // Get the attribute pointer and enable it
+      var vertexPosition = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+      gl.enableVertexAttribArray(vertexPosition);
+      gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
+
+      gl.drawElements(gl.LINES, indices.length, gl.UNSIGNED_SHORT, 0);
+    }
+  }
+
+
+  const G = 9.80665; // UNITS - m/s²
+  const G_MS = G / 1000000; // ADJUST FOR MILLISECONDS
+  const G_PX_MS = G_MS * 3779.5296; // ADJUST FOR PIXEL PHYSICAL SIZE
+  const RADIUS = 25;
+  const COLL_Y = S - RADIUS;
+  const E = 0.99;
+
+  let ball = {
+    pos : { x: width / 2, y: -2 * S },
+    vel: { x: 0, y: 0 },
   };
 
-  function frame() {
-    clear();
-    gl.useProgram(shaderProgram);
-    setCamera();
-    drawCube(state.cube);
-    drawSphere(0, (state.position.y - state.cube), 0, state.radius);
+  function update() {
+    var next = structuredClone(ball);
 
-    var next = structuredClone(state);
-    next.time = Date.now();
+    var dt = Date.now() - t;
+    t = Date.now();
 
-    var elapsed = next.time - state.time;
-    next.velocity.y += next.acceleration.y * elapsed;
-    next.position.y += (state.velocity.y * elapsed) + (state.acceleration.y / 2) * (elapsed * elapsed);
+    next.vel.y += G_PX_MS * dt;
+    next.pos.y += (ball.vel.y * dt) + (G_PX_MS / 2) * (dt * dt);
 
-    let collisionHeight = state.cube * 2 - state.radius;
-    if (next.position.y > collisionHeight) {
-      var dy = collisionHeight - state.position.y;
-      var t = (-state.velocity.y + Math.sqrt(state.velocity.y * state.velocity.y + 2 * state.acceleration.y * dy)) / state.acceleration.y;
-      var v = next.acceleration.y * t + state.velocity.y;
+    if (next.pos.y > COLL_Y) {
+      let dy = COLL_Y - ball.pos.y;
+      let t = (-ball.vel.y + Math.sqrt(ball.vel.y * ball.vel.y + 2 * G_PX_MS * dy)) / G_PX_MS;
+      let v = G_PX_MS * t + ball.vel.y;
 
-      state.time = next.time;
-      state.velocity.y = -v * 0.99;
-      state.position.y = collisionHeight;
-    } else {
-      state.time = next.time;
-      state.velocity.y = next.velocity.y;
-      state.position.y = next.position.y;
+      next.vel.y = -v * E;
+      next.pos.y = COLL_Y;
     }
+
+    ball.vel.y = next.vel.y;
+    ball.pos.y = next.pos.y;
+  }
+
+  var setCamera = initCamera();
+  var drawCube = initCube();
+  var drawSphere = initSphere();
+
+
+  gl.useProgram(shaderProgram);
+
+  gl.viewport(0, 0, canvas.width, canvas.height);
+
+  function frame() {
+
+    clear();
+    setCamera();
+    drawCube();
+    drawSphere(0, ball.pos.y, 0, RADIUS);
+
+    update();
 
     window.requestAnimationFrame(frame);
   }
+
+  var t = Date.now();
   window.requestAnimationFrame(frame);
 })();
