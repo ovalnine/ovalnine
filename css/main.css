@@ -29,6 +29,17 @@ pre {
   line-height: 1rem;
 }
 
+@media (prefers-color-scheme: dark) {
+  pre {
+    border: 1px solid white;
+  }
+
+  body {
+    background-color: black;
+    color: white
+  }
+}
+
 code {
   white-space: pre;
   font-family: 'Space Mono', monospace;

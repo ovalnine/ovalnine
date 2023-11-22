@@ -34,7 +34,7 @@ grayscale style (c) MY Sun <simonmysun@gmail.com>
 .hljs-doctag,
 .hljs-formula {
   color: #CCC;
-  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAJ0lEQVQIW2O8e/fufwYGBgZBQUEQxcCIIfDu3Tuwivfv30NUoAsAALHpFMMLqZlPAAAAAElFTkSuQmCC) repeat
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAEBAAAAABJaiyjAAAAEUlEQVQI12NQEmQAIkElIAIABNQAzSQraPMAAAAASUVORK5CYII=) repeat
 }
 .hljs-title,
 .hljs-section,
@@ -57,13 +57,13 @@ grayscale style (c) MY Sun <simonmysun@gmail.com>
 }
 .hljs-regexp {
   color: #CCC;
-  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAICAYAAADA+m62AAAAPUlEQVQYV2NkQAN37979r6yszIgujiIAU4RNMVwhuiQ6H6wQl3XI4oy4FMHcCJPHcDS6J2A2EqUQpJhohQDexSef15DBCwAAAABJRU5ErkJggg==) repeat
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAIBAAAAAAgYdxrAAAAAnRSTlMAD+Ys0KkAAAAnSURBVAjXJciBCQAwAMKwfuT/b/lA5zaEIEWj2F6zsVdZNQz79HsAONYjiN355F0AAAAASUVORK5CYII=) repeat
 }
 .hljs-symbol,
 .hljs-bullet,
 .hljs-link {
   color: #fff;
-  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAKElEQVQIW2NkQAO7d+/+z4gsBhJwdXVlhAvCBECKwIIwAbhKZBUwBQA6hBpm5efZsgAAAABJRU5ErkJggg==) repeat
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFBAAAAABt9JQ4AAAAAnRSTlMAD+Ys0KkAAAAbSURBVAjXY/j/34Hh/5cPDP/9PzB8AdL+/x0AfGILxv5PxwYAAAAASUVORK5CYII=) repeat
 }
 .hljs-built_in {
   color: #fff;
@@ -75,11 +75,11 @@ grayscale style (c) MY Sun <simonmysun@gmail.com>
 }
 .hljs-deletion {
   color: #000;
-  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAADCAYAAABS3WWCAAAAE0lEQVQIW2MMDQ39zzhz5kwIAQAyxweWgUHd1AAAAABJRU5ErkJggg==) repeat
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAADBAAAAACyRtdfAAAADklEQVQI12NYwJDAkAAABKYBYaMuIM4AAAAASUVORK5CYII=) repeat
 }
 .hljs-addition {
   color: #fff;
-  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAALUlEQVQYV2N89+7dfwYk8P79ewZBQUFkIQZGOiu6e/cuiptQHAPl0NtNxAQBAM97Oejj3Dg7AAAAAElFTkSuQmCC) repeat
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJBAAAAAAACrTNAAAAF0lEQVQI12MQFFQUFGDAJJWAQIEBhywAZmIDyaRs4AgAAAAASUVORK5CYII=) repeat
 }
 .hljs-emphasis {
   font-style: italic

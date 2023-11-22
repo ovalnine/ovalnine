@@ -53,3 +53,13 @@
 	margin-left: auto;
 	margin-right: auto;
 }
+
+@media (prefers-color-scheme: dark) {
+	.ball {
+		background-color: white;
+	}
+
+	.border {
+		border: 1px solid white;
+	}
+}
