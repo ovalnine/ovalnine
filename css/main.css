@@ -6,6 +6,7 @@ h1 {
   text-align: center;
   font-family: 'Gamja Flower', sans-serif;
   font-size: 7rem;
+  line-height: 5rem;
 }
 
 h2 {
@@ -51,4 +52,11 @@ code {
   width: 100%;
   max-width: 360px;
   margin: 0 auto; 
+}
+
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media only screen and (min-width: 600px) {
+  .main-container {
+    max-width: 700px;
+  }
 }

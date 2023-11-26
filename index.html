@@ -32,11 +32,11 @@
 <body>
 	<div class="main-container">
 		<h1>
-			Drawing natively
+			How to bounce a ball
 		</h1>
 
 		<p>
-			My intention with this blog is to demonstarte and explain some of the core concepts behind these 5 native features the browser provides.
+			My intention with this blog is to demonstarte and explain some of the core concepts behind 5 native features the browser provides.
 			With this said, I will skip some of the boilerplate that comes with using these features directly.
 		</p>
 		<p>
@@ -273,7 +273,7 @@ function draw() {
 
 		<p>
 			We can use our <code>CanvasRenderingContext2D</code> to draw the simulated bouncing ball.
-			Every time we need to draw, we'll clearing everything by drawing a <code>clearRect(x, y, width, height)</code> the size of the <code>&lt;canvas/&gt;</code>.
+			Every time we need to draw, we'll clear everything by drawing a <code>clearRect(x, y, width, height)</code> the size of the <code>&lt;canvas/&gt;</code>.
 			We will start with <code>beginPath()</code> to create a new drawing object.
 			We don't have a circle function, but we can use the <code>arc(x, y, radius, startAngle, endAngle)</code> method to draw a circle by specifying a full <code>360°</code> turn.
 			And lastly we can specify that we want to <code>fill()</code> this path with color.
@@ -427,7 +427,7 @@ function initCube() {
 
 		<p>
 			For our box we will draw lines representing a cube.
-			A cube has 8 corner or <code>vertices</code> that we will generate from its center using the half side length <code>S</code> of the cube.
+			A cube has 8 corners or <code>vertices</code> that we will generate from its center using the half side length <code>S</code> of the cube.
 			The <code>indices</code> will then represent the pair of vertices that make up our box lines.
 		</p>
 
@@ -634,10 +634,343 @@ function initCamera() {
 			<canvas id="canvas-webgl" class="border"></canvas>
 		</div>
 
+		<h2>
+			WebGPU
+			<br/>
+			-
+			<br/>
+			Compute Shaders
+		</h2>
+
+		<p>
+			WebGPU is the replacement of WebGL for the modern GPUs,
+			it has more advanced features and its API its basically an abstraction layer on top of
+			Vulkan, DirectX 12, Metal. It can be used with OpenGL and OpenGL ES backends as well.
+		</p>
+
+		<p>
+			WebGPU can be used directly in the browser through the WebGPU API, or it can be compiled down to
+			WASM by using the direct implementations: Dawn/C++ and wgpu/Rust.
+		</p>
+
+		<p>
+			One of the big advantages of modern graphics APIs is the removal of shared global state.
+			With WebGPU you have to define every aspect of your pipeline which results in little more verbose but much more performant program.
+		</p>
+
+		<p>
+			In the next example, we'll take advantage of compute shaders to instantiate a number of bouncing balls,
+			where each ball's position and velocity is calculated independently in the GPU.
+			I won't touch on the rendering pipeline since we already brushed over the core concepts in the last example with WebGL.
+			Although there are big differences between the two rendering APIs, I believe that learning about compute shaders is much more fundamental.
+		</p>
+
+		<p>
+			WebGPU allows you to run general-purpose parallel compute workloads using compute shaders.
+			Compute shaders are similar to WebGL/OpenGL shaders, but instead of operating on graphics data to render images,
+			they perform arbitrary computations for GPGPU (General-purpose computing) tasks like physics simulation, image processing, AI, etc.
+		</p>
+
+		<pre>
+			<code class="language-rust hljs-grayscale">
+struct Ball {
+	pos: vec2&lt;f32&gt;,
+	vel: vec2&lt;f32&gt;,
+}
+
+@group(0) @binding(0) var&lt;storage, read&gt; state: array&lt;Ball&gt;;
+@group(0) @binding(1) var&lt;storage, read_write&gt; next: array&lt;Ball&gt;;
+@group(1) @binding(0) var&lt;uniform&gt; size: vec2&lt;f32&gt;;
+@group(1) @binding(1) var&lt;uniform&gt; r: f32;
+@group(1) @binding(2) var&lt;uniform&gt; G: f32;
+@group(1) @binding(3) var&lt;uniform&gt; dt: f32;
+
+@compute @workgroup_size(8)
+fn main(@builtin(local_invocation_index) i: u32) {
+	// CALCULATE Y-AXIS VELOCITY AND POSITION
+	let next_vel_y = state[i].vel.y + G * dt;
+	let next_pos_y = state[i].pos.y + ((next_vel_y + state[i].vel.y) / 2.0) * dt;
+
+	let COLL_Y = (size.y / 2.0) - r;
+	if (next_pos_y &gt; COLL_Y) {
+		let dy = COLL_Y - state[i].pos.y;
+		let t = (-state[i].vel.y + sqrt(pow(state[i].vel.y, 2) + 2 * G * dy)) / G;
+		let v = G * t + state[i].vel.y;
+
+		next[i].vel.y = -v * 1;
+		next[i].pos.y = COLL_Y;
+	}
+	else {
+		next[i].vel.y = next_vel_y;
+		next[i].pos.y = next_pos_y;
+	}
+
+	// CALCULATE X-AXIS VELOCITY AND POSITION
+	let next_vel_x = state[i].vel.x;
+	let next_pos_x = state[i].pos.x + state[i].vel.x * dt;
+
+	let COLL_X = (size.x / 2.0) - r;
+	if (next_pos_x &gt; COLL_X) {
+		next[i].vel.x = -next_vel_x;
+		next[i].pos.x = COLL_X;
+	}
+	else if (next_pos_x &lt; -COLL_X) {
+		next[i].vel.x = -next_vel_x;
+		next[i].pos.x = -COLL_X;
+	}
+	else {
+		next[i].vel.x = next_vel_x;
+		next[i].pos.x = next_pos_x;
+	}
+}
+			</code>
+		</pre>
+
+		<p>
+			The code above is a compute shader written in WGSL(WebGPU Shading Language).
+			We start by defining a basic <code>struct</code> for our bouncing ball.
+			It has fields for <code>pos</code>ition and <code>vel</code>ocity.
+		</p>
+
+		<p>
+			We define some of our <code>binding</code> <code>var</code>iables in two <code>group</code>(s).
+			The first group are 2 <code>Ball</code> <code>array</code>(s), the current <code>state</code> and the <code>next</code> state.
+			We'll use <code>storage</code> buffer for this bindings since we need to write our calculated values.
+		</p>
+
+		<p>
+			The second group are all of our <code>uniform</code>(s) that we'll use to calculate the next state.
+			Things like the <code>size</code> of the canvas, the <code>r</code>adius of the ball, the <code>G</code>ravity and the time delta <code>dt</code>.
+		</p>
+
+		<p>
+			Next we define our <code>main</code> function.
+			The <code>@compute</code> decorator indicates that this function is a compute shader.
+			A workgroup is a group of cells where each cell maps to an instance of a running shader program.
+			The <code>@workgroup_size</code> defines how many cells are in a workgroup.
+			This can be define in 1, 2 or 3 dimensions, in this example we'll leave it as a row of 8 cells.
+		</p>
+
+		<p>
+			In our function we'll use the <code>builtin</code> variable <code>local_invocation_index</code>.
+			This will be the index of the local cell in our workgroup.
+			We can use this to access the current and next state from our storage buffer arrays.
+			From then the code is what we've seen already to calculate the position and velocity only this time we have a constraint for the walls as well.
+		</p>
+
+		<pre>
+			<code class="language-js hljs-grayscale">
+const computePipeline = device.createComputePipeline({
+	layout: 'auto',
+	compute: {
+		module: device.createShaderModule({
+			code: compWGSL
+		}),
+		entryPoint: 'main'
+	}
+});
+			</code>
+		</pre>
+
+		<p>
+			This is how we create a compute pipeline.
+			We can specify a specific <code>layout</code> for our bindings, but in this case we'll just let the API figure it out <code>auto</code>matically.
+			Our shader exists in a template literal <code>compWGSL</code> and from it we can create our shader module.
+			Lastly we specify our entry function name <code>main</code>.
+		</p>
+
+		<pre>
+			<code class="language-js hljs-grayscale">
+// SIZE UNIFORM
+const sizeUniformBuffer = device.createBuffer({
+	size: Float32Array.BYTES_PER_ELEMENT * 2,
+	usage: GPUBufferUsage.UNIFORM,
+	mappedAtCreation: true
+});
+new Float32Array(sizeUniformBuffer.getMappedRange()).set([canvas.width, canvas.height]);
+sizeUniformBuffer.unmap();
+
+// RADIUS UNIFORM
+const BALL_RADIUS = 25;
+const radiusUniformBuffer = device.createBuffer({
+	size: Float32Array.BYTES_PER_ELEMENT,
+	usage: GPUBufferUsage.UNIFORM,
+	mappedAtCreation: true
+});
+new Float32Array(radiusUniformBuffer.getMappedRange()).set([BALL_RADIUS]);
+radiusUniformBuffer.unmap();
+
+// GRAVITY UNIFORM
+const G = 9.80665; // UNITS - m/s²
+const G_MS = G / 1000000; // ADJUST FOR MILLISECONDS
+const G_PX_MS = G_MS * 3779.5296; // ADJUST FOR PIXEL PHYSICAL SIZE
+const gravityUniformBuffer = device.createBuffer({
+	size: Float32Array.BYTES_PER_ELEMENT,
+	usage: GPUBufferUsage.UNIFORM,
+	mappedAtCreation: true
+});
+new Float32Array(gravityUniformBuffer.getMappedRange()).set([G_PX_MS]);
+gravityUniformBuffer.unmap();
+
+// TIME DELTA UNIFORM
+const stagingElapsedUniformBuffer = device.createBuffer({
+	size: Float32Array.BYTES_PER_ELEMENT,
+	usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC
+})
+const elapsedUniformBuffer = device.createBuffer({
+	size: Float32Array.BYTES_PER_ELEMENT,
+	usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+});
+			</code>
+		</pre>
+
+		<p>
+			We mentioned before that we would need some <code>uniform</code> variables that would help us define some parameters for our system.
+			For each uniform we'll <code>createBuffer</code> with the <code>size</code> of the data and the usage of the buffer <code>GPUBufferUsage.UNIFORM</code>.
+			<code>mappedAtCreation</code> just means that we'll get access to the buffer memory to set an initial value.
+			For the time delta we'll need an staging buffer to update the value on every frame and copy the contents to the real buffer used in our shader.
+		</p>
+
+		<pre>
+			<code class="language-js hljs-grayscale">
+const NO_OF_BALLS = 4;
+var ballInstances = [];
+for (var i = 0; i < NO_OF_BALLS; i++) {
+	ballInstances.push(
+		// position
+		(Math.random() - 0.5) * ((canvas.width / 2) - BALL_RADIUS),
+		(Math.random() - 0.5) * ((canvas.height / 2) - BALL_RADIUS),
+		// velocity
+		(Math.random() - 0.5) * G_PX_MS * 100,
+		(Math.random() - 0.5) * G_PX_MS * 200,
+	);
+}
+
+const ballInstanceBufferA = device.createBuffer({
+	size: Float32Array.BYTES_PER_ELEMENT * NO_OF_BALLS * 4,
+	usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX,
+	mappedAtCreation: true,
+});
+
+new Float32Array(ballInstanceBufferA.getMappedRange()).set(ballInstances);
+ballInstanceBufferA.unmap();
+
+const ballInstanceBufferB = device.createBuffer({
+	size: Float32Array.BYTES_PER_ELEMENT * NO_OF_BALLS * 4,
+	usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX,
+});
+			</code>
+		</pre>
+
+		<p>
+			Let's now create <code>4</code> balls with some random intial values for position and velocity.
+			We'll add all these intial values into the <code>ballInstances</code> array.
+			These are the values that we'll use inside our shader to calculate the next state.
+		</p>
+
+		<p>
+			We'll use 2 buffers, 1 to keep our current state and 1 to write our next state.
+			Now we <code>createBuffer</code> this time with <code>GPUBufferUsage.STORAGE</code> .
+			The <code>GPUBufferUsage.VERTEX</code> indicates that the contents of this buffer we'll be used as vertices in our render pipeline.
+		</p>
+
+		<pre>
+			<code class="language-js hljs-grayscale">
+const bindGroupA = device.createBindGroup({
+	layout: computePipeline.getBindGroupLayout(0),
+	entries: [
+		{ binding: 0, resource: { buffer: ballInstanceBufferA }},
+		{ binding: 1, resource: { buffer: ballInstanceBufferB }},
+	]
+});
+
+const bindGroupB = device.createBindGroup({
+	layout: computePipeline.getBindGroupLayout(0),
+	entries: [
+		{ binding: 0, resource: { buffer: ballInstanceBufferB }},
+		{ binding: 1, resource: { buffer: ballInstanceBufferA }},
+	]
+});
+
+const bindGroupUniforms = device.createBindGroup({
+	layout: computePipeline.getBindGroupLayout(1),
+	entries: [
+		{ binding: 0, resource: { buffer: sizeUniformBuffer }},
+		{ binding: 1, resource: { buffer: radiusUniformBuffer }},
+		{ binding: 2, resource: { buffer: gravityUniformBuffer }},
+		{ binding: 3, resource: { buffer: elapsedUniformBuffer }}
+	]
+});
+			</code>
+		</pre>
+
+		<p>
+			Here we just place all of our resource buffers into bind groups that we'll send to our compute pipeline.
+			The reason we need 2 bind groups for our storage buffers,
+			is we need to flip the buffers on every frame to keep updating our system with the next value.
+		</p>
+
+		<pre>
+			<code>
+let t = Date.now(), ff = 1;
+
+async function frame() {
+	// TIME DELTA UNIFORM
+	await stagingElapsedUniformBuffer.mapAsync(GPUMapMode.WRITE);
+	new Float32Array(stagingElapsedUniformBuffer.getMappedRange()).set([Date.now() - t]);
+	stagingElapsedUniformBuffer.unmap();
+
+	t = Date.now();
+
+	// COMMAND ENCODER
+	const commandEncoder = device.createCommandEncoder();
+
+	// COPY ELAPSED TIME TO UNIFORM
+	commandEncoder.copyBufferToBuffer(
+		stagingElapsedUniformBuffer, 0,
+		elapsedUniformBuffer, 0, 
+		Float32Array.BYTES_PER_ELEMENT);
+
+	// COMPUTE
+	const passEncoderCompute = commandEncoder.beginComputePass();
+	passEncoderCompute.setPipeline(computePipeline);
+	passEncoderCompute.setBindGroup(0, ff ? bindGroupA : bindGroupB);
+	passEncoderCompute.setBindGroup(1, bindGroupUniforms);
+	passEncoderCompute.dispatchWorkgroups(1);
+	passEncoderCompute.end();
+
+	// RENDERING...
+
+	// SUBMIT COMMANDS
+	device.queue.submit([commandEncoder.finish()]);
+
+	ff = 1 - ff;
+	window.requestAnimationFrame(frame);
+}
+			</code>
+		</pre>
+
+		<p>
+			To finish we put everything into motion in our <code>frame</code> function.
+			We update our staging time delta uniform buffer.
+			We <code>createCommandEncoder</code> and we use it to write a command for copying our staging buffer into our real delta time buffer.
+			We start a new pass and we use this encoder to set our pipeline, set the bind groups, dispatch 1 workgroup and end the pass.
+			We can later submit this encoded data into our queue to be processed by our GPU.
+			As we mentioned before we need to switch our storage buffers and that is what we use the <code>ff</code> variable for.
+		</p>
+
 		<!-- CANVAS: WEBGPU -->
 		<div class="container" id="container-webgl">
 			<canvas id="canvas-webgpu" class="border"></canvas>
 		</div>
+
+		<p>
+			I hope that the examples provided you a little more knowledge of
+			the core concepts presented and that it has inspired you
+			to make a little more research in any of these topics.
+		</p>
+
+		<br>
 
 		<script src="vendor/gl-matrix-min.js"></script>
 		<script src="context2d.js"></script>
