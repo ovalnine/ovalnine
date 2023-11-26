@@ -84,6 +84,19 @@
     }
   });
 
+  //COLOR UNIFORM
+  var color = [0.0, 0.0, 0.0, 1.0];
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    color = [1.0, 1.0, 1.0, 1.0];
+  }
+  const colorUniformBuffer = device.createBuffer({
+    size: Float32Array.BYTES_PER_ELEMENT * 4,
+    usage: GPUBufferUsage.UNIFORM,
+    mappedAtCreation: true
+  });
+  new Float32Array(colorUniformBuffer.getMappedRange()).set(color);
+  colorUniformBuffer.unmap();
+
   // SIZE UNIFORM
   const sizeUniformBuffer = device.createBuffer({
     size: Float32Array.BYTES_PER_ELEMENT * 2,
@@ -178,6 +191,7 @@
 
   const vertWGSL = `
   @binding(0) @group(0) var<uniform> size: vec2<f32>;
+  @binding(1) @group(0) var<uniform> color: vec4<f32>;
 
   @vertex
   fn main(
@@ -189,9 +203,12 @@
   `;
 
   const fragWGSL = `
+  @binding(0) @group(0) var<uniform> size: vec2<f32>;
+  @binding(1) @group(0) var<uniform> color: vec4<f32>;
+
   @fragment
   fn main() -> @location(0) vec4<f32> {
-    return vec4(0.0, 0.0, 0.0, 1.0);
+    return color;
   }
   `;
 
@@ -294,6 +311,12 @@
         resource: {
           buffer: sizeUniformBuffer
         }
+      },
+      {
+        binding: 1,
+        resource: {
+          buffer: colorUniformBuffer
+        }
       }
     ]
   });
@@ -329,7 +352,7 @@
       colorAttachments: [
         {
           view: textureView,
-          clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+          clearValue: { r: !color[0], g: !color[1], b: !color[2], a: color[3] },
           loadOp: 'clear',
           storeOp: 'store',
         },

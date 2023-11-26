@@ -3,6 +3,7 @@ body {
 }
 
 h1 {
+  margin-top: 2rem;
   text-align: center;
   font-family: 'Gamja Flower', sans-serif;
   font-size: 7rem;
@@ -30,6 +31,10 @@ pre {
   line-height: 1rem;
 }
 
+path {
+  fill: black;
+}
+
 @media (prefers-color-scheme: dark) {
   pre {
     border: 1px solid white;
@@ -38,6 +43,10 @@ pre {
   body {
     background-color: black;
     color: white
+  }
+
+  path {
+    fill: white;
   }
 }
 
@@ -55,7 +64,7 @@ code {
 }
 
 /* Small devices (portrait tablets and large phones, 600px and up) */
-@media only screen and (min-width: 600px) {
+@media only screen and (min-width: 768px) {
   .main-container {
     max-width: 700px;
   }

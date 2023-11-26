@@ -26,8 +26,10 @@
 
   // Fragment shader program
   var fsSource = `
+      precision mediump float;
+      uniform vec4 u_color;
       void main(void) {
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        gl_FragColor = u_color;
       }
   `;
 
@@ -149,8 +151,16 @@
 
 
   function clear() {
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    var fillColor = [0.0, 0.0, 0.0, 1.0];
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      fillColor = [1.0, 1.0, 1.0, 1.0];
+    }
+
+    gl.clearColor(0.0, 0.0, 0.0, 0.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
+
+    const colorLocation = gl.getUniformLocation(shaderProgram, "u_color");
+    gl.uniform4fv(colorLocation, fillColor);
   }
 
   const S = 100; // Half a side of cube

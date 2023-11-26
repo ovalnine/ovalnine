@@ -8,7 +8,11 @@
   canvas.height = height;
 
   let ctx = canvas.getContext("2d");
+
   ctx.fillStyle = "black";
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    ctx.fillStyle = "white";
+  }
 
   const G = 9.80665;            // m/s²
   const G_MS = G / 1_000_000;   // m/ms² 
