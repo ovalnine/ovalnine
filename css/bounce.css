@@ -15,9 +15,16 @@
 	position: relative;
 	top: 25px;
 
-	animation-duration: 0.36106s;
 	animation-name: bounce-animation;
 	animation-iteration-count: infinite;
+}
+
+.real-duration {
+	animation-duration: 0.36106s;
+}
+
+.fake-duration {
+	animation-duration: 1s;
 }
 
 @keyframes bounce-animation {
@@ -40,19 +47,6 @@
 	}
 }
 
-.border {
-	border: 1px solid black;
-}
-
-.container {
-	margin-top: 2rem;
-	width: var(--box-width);
-	height: var(--box-height);
-	display: flex;
-	justify-content: center;
-	margin-left: auto;
-	margin-right: auto;
-}
 
 @media (prefers-color-scheme: dark) {
 	.ball {

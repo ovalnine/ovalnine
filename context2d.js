@@ -65,6 +65,13 @@
     window.requestAnimationFrame(frame);
   }
 
+  canvas.addEventListener('click', () => {
+    ball = {
+      pos: { x: width / 2, y: 0 },
+      vel: { x: 0, y: 0 },
+    };
+  });
+
   var t = Date.now();
   window.requestAnimationFrame(frame);
 })();

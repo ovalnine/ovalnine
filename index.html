@@ -134,7 +134,7 @@
 
 		<!-- CSS/HTML -->
 		<div class="container border">
-			<div class="ball top bounce">
+			<div class="ball top bounce real-duration">
 			</div>
 		</div>
 
@@ -188,12 +188,12 @@
 
 		<!-- SVG -->
 		<div class="container border">
-			<svg width="13.229167mm" height="13.229167mm" viewBox="0 0 13.229167 13.229167" class="bounce">
+			<svg width="13.229167mm" height="13.229167mm" viewBox="0 0 13.229167 13.229167" class="bounce fake-duration">
 				<g transform="translate(-56.885417,-13.229167)">
 					<path>
 						<animate
 							attributeName="d"
-							dur="0.36106s"
+							dur="1s"
 							repeatCount="indefinite"
 							values="
 								M 70.114583,19.84375 C 67.909722,22.048611 65.704861,24.253472 63.5,26.458333 61.295139,24.253472 59.090278,22.048611 56.885417,19.84375 59.090278,17.638889 61.295139,15.434028 63.5,13.229167 c 2.204861,2.204861 4.409722,4.409722 6.614583,6.614583 z;
@@ -310,14 +310,18 @@ function update() {
 			On every frame we will calculate the change of time <code>dt</code>.
 			We will need to increase our velocity by our given time delta.
 			From calculus we know that acceleration is equal to the ratio of the change of velocity with respect to time, and after rearranging terms we get:
-			<br/>
+		</p>
+
+		<p style="text-align: center">
 			\(\Delta v = g\Delta t\)
 		</p>
 
 		<p>
 			Similarly we will need to increase our position by our given time delta.
 			And again, from calculus we know that acceleration is equal to the second derivative of displacement(change in position). So after integrating and rearranging terms we get:
-			<br/>
+		</p>
+
+		<p style="text-align: center">
 			\(\Delta x = v_0\Delta t + \frac{1}{2}g\Delta t^2\)
 		</p>
 
@@ -962,10 +966,15 @@ async function frame() {
 		<!-- CANVAS: WEBGPU -->
 		<div class="container" id="container-webgl">
 			<canvas id="canvas-webgpu" class="border"></canvas>
+			<p id="non-supported-webgpu" class="border hidden center"><code>WebGPU is not available in your browser.</code></p>
 		</div>
 
+		<h2>
+			Conclusion
+		</h2>
+
 		<p>
-			I hope that the examples provided you a little more knowledge of
+			I hope that the examples provided you with a little more knowledge of
 			the core concepts presented and that it has inspired you
 			to make a little more research in any of these topics.
 		</p>
