@@ -1,5 +1,5 @@
 (async function () {
-  let container = document.querySelector("#container-webgl");
+  let container = document.querySelector("#container-webgpu");
   let width = container.offsetWidth;
   let height = container.offsetHeight;
 
@@ -7,19 +7,19 @@
   canvas.width = width;
   canvas.height = height;
 
-  const context = canvas.getContext('webgpu');
-
-  if (context == null) {
-    let message = document.querySelector("#non-supported-webgpu");
-    message.classList.remove("hidden");
-    canvas.classList.add("hidden");
-    return;
+  if (!('gpu' in navigator)) {
+   let message = document.querySelector("#non-supported-webgpu");
+   message.classList.toggle("hidden");
+   canvas.classList.toggle("hidden");
+   return;
   }
 
   const adapter = await navigator.gpu.requestAdapter();
   const device = await adapter.requestDevice();
 
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
+
+  const context = canvas.getContext('webgpu');
 
   context.configure({
     device,
@@ -173,26 +173,26 @@
   const bindGroupA = device.createBindGroup({
     layout: computePipeline.getBindGroupLayout(0),
     entries: [
-      { binding: 0, resource: { buffer: ballInstanceBufferA }},
-      { binding: 1, resource: { buffer: ballInstanceBufferB }},
+      { binding: 0, resource: { buffer: ballInstanceBufferA } },
+      { binding: 1, resource: { buffer: ballInstanceBufferB } },
     ]
   });
 
   const bindGroupB = device.createBindGroup({
     layout: computePipeline.getBindGroupLayout(0),
     entries: [
-      { binding: 0, resource: { buffer: ballInstanceBufferB }},
-      { binding: 1, resource: { buffer: ballInstanceBufferA }},
+      { binding: 0, resource: { buffer: ballInstanceBufferB } },
+      { binding: 1, resource: { buffer: ballInstanceBufferA } },
     ]
   });
 
   const bindGroupUniforms = device.createBindGroup({
     layout: computePipeline.getBindGroupLayout(1),
     entries: [
-      { binding: 0, resource: { buffer: sizeUniformBuffer }},
-      { binding: 1, resource: { buffer: radiusUniformBuffer }},
-      { binding: 2, resource: { buffer: gravityUniformBuffer }},
-      { binding: 3, resource: { buffer: elapsedUniformBuffer }}
+      { binding: 0, resource: { buffer: sizeUniformBuffer } },
+      { binding: 1, resource: { buffer: radiusUniformBuffer } },
+      { binding: 2, resource: { buffer: gravityUniformBuffer } },
+      { binding: 3, resource: { buffer: elapsedUniformBuffer } }
     ]
   });
 
@@ -272,7 +272,7 @@
     },
   });
 
-  const circleData = (function() {
+  const circleData = (function () {
     const segments = 40;
     const scale = 25;
 
