@@ -66,12 +66,15 @@ p code {
 	border: 1px solid black;
 }
 
+.flex {
+  display: flex;
+}
+
 .hidden {
   display: none;
 }
 
 .center {
-  display: flex;
   flex-direction: column;
   justify-content: center;
 }

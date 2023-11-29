@@ -7,14 +7,23 @@
   canvas.width = width;
   canvas.height = height;
 
-  if (!('gpu' in navigator)) {
+  function hideCanvas() {
    let message = document.querySelector("#non-supported-webgpu");
    message.classList.toggle("hidden");
+   message.classList.toggle("flex");
    canvas.classList.toggle("hidden");
-   return;
+  }
+
+  if (!navigator.gpu) {
+    return hideCanvas();
   }
 
   const adapter = await navigator.gpu.requestAdapter();
+
+  if (!adapter) {
+    return hideCanvas();
+  }
+
   const device = await adapter.requestDevice();
 
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
